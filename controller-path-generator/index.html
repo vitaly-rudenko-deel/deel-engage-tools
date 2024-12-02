@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controller Path & Name generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">Controller Path & Name generator</h1>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">API URL</label>
+                <input
+                    type="text"
+                    id="urlInput"
+                    class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="/goals/:id/child_goals"
+                >
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Controller Path</label>
+                <div
+                    id="controllerPath"
+                    class="w-full p-2 bg-gray-50 border rounded-md text-gray-600 min-h-[40px] break-all"
+                ></div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Controller Path</label>
+                <div
+                    id="controllerName"
+                    class="w-full p-2 bg-gray-50 border rounded-md text-gray-600 min-h-[40px] break-all"
+                ></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const controllerPath = document.getElementById('controllerPath');
+        const controllerName = document.getElementById('controllerName');
+
+        function convertUrlToPath(url) {
+            url = url.replace(/^https?:\/\//, '')
+            url = url.replace(/^.+\..+?\//, '')
+            const parts = url.split('/').filter(Boolean)
+
+            const resources = []
+            let warning = false
+            let isAdmin = false
+
+            for (const [i, part] of parts.entries()) {
+                if (part === 'hr_suite') continue;
+                if (part === 'admin') {
+                    isAdmin = true;
+                    continue;
+                }
+                if (part.startsWith(':')) continue
+                if (parts[i + 1]?.startsWith(':')) {
+                    resources.push(part.replaceAll('_', '-') + (part.endsWith('s') ? '' : 's'))
+                    if (!part.endsWith('s')) warning = true
+                } else {
+                    resources.push(part.replaceAll('_', '-'))
+                }
+            }
+
+            return {
+                controllerPath: 'src/<module>/controllers/' + (isAdmin ? 'admin/' : '') + resources.join('/') + '.controller.ts',
+                controllerName: (isAdmin ? 'Admin' : '') + resources
+                    .map(resource => resource.split('-').map(part => part[0].toUpperCase() + part.slice(1)).join(''))
+                    .join('') + 'Controller',
+                warning,
+            }
+        }
+
+        urlInput.addEventListener('input', (e) => refresh());
+
+        function refresh() {
+            const result = convertUrlToPath(urlInput.value);
+            controllerPath.textContent = result.controllerPath;
+            controllerName.textContent = result.controllerName;
+            if (result.warning) {
+                controllerPath.style.border = '1px solid red'
+            } else {
+                controllerPath.style.border = 'unset'
+            }
+        }
+
+        refresh()
+    </script>
+</body>
+</html>
