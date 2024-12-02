@@ -68,6 +68,10 @@
                 }
             }
 
+            if (!resources.at(-1)?.endsWith('s')) {
+                warning = true;
+            }
+
             return {
                 controllerPath: 'src/<module>/controllers/' + (isAdmin ? 'admin/' : '') + resources.join('/') + '.controller.ts',
                 controllerName: (isAdmin ? 'Admin' : '') + resources
